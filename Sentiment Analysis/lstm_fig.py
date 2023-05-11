@@ -1,30 +1,55 @@
-from tqdm.auto import tqdm
+from tqdm import tqdm
 import re
 from transformers import BertModel, BertTokenizer
 import transformers
 from tokenizers import BertWordPieceTokenizer
-import numpy as np 
-import pandas as pd 
+import numpy as np
+import pandas as pd
 import os
 from pathlib import Path
-
+import time
+import logging
 import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
 from transformers import BertModel
-
+import matplotlib.pyplot as plt
 
 from torch.utils.data import DataLoader, TensorDataset, Dataset
 from torch.optim import AdamW, Adam
 import torch
 from sklearn.metrics import accuracy_score
-
+from sklearn.model_selection import train_test_split
 
 from sklearn.model_selection import StratifiedShuffleSplit
+
+# Hyper parameter
+epoch = 20
+batch_size = 32
+lr = 0.005
+
+loss_list = []
+test_acc_list = []
+train_acc_list = []
+
+log_path = Path().cwd() / ('LSTM_train_validation_' + 'epoch_'  + '_'+ str(
+    time.strftime("%m_%d_%H_%M_%S", time.localtime())) + ".log")
+
+logging.basicConfig(format='%(levelname)s: %(message)s',
+                    level=logging.INFO,
+                    filename=log_path,
+                    filemode='a')
+
 TRAIN_DIR = Path().cwd() / 'tweet-sentiment-extraction/train.csv'
+TEST_DIR = Path().cwd() / 'tweet-sentiment-extraction/test.csv'
+
 df = pd.read_csv(TRAIN_DIR)
+df_test = pd.read_csv(TEST_DIR)
+
+
+'''----------------------------Data Cleaning--------------------------------------------------'''
 
 def basic_cleaning(text):
     text = re.sub(r'https?://www\.\S+\.cm', '', text)
@@ -36,7 +61,6 @@ def remove_html(text):
     html = re.compile(r'<.*?>')
     return html.sub(r'',text)
 
-# remove repeated characters
 def remove_multiplechars(text):
     text = re.sub(r'(.)\1{3,}', r'\1', text)
     return text
@@ -50,24 +74,17 @@ def clean(df):
 
 df_clean = clean(df)
 df_clean_selection = df_clean.sample(frac=1)
-# df_clean_selection = pd.concat([df_clean.sample(frac=1), df_clean[df_clean.textID.isin(resmaple_id)],
-#                                 df_clean[df_clean.textID.isin(resmaple_id)]], axis=0, ignore_index=True)
+
 X = df_clean_selection.text.values
 y, uniques = pd.factorize(df_clean_selection.sentiment, sort=True)
 y_tf = pd.get_dummies(df_clean_selection.sentiment)
-print('clean Done')
-
-
-bert_tokenizer = transformers.AutoTokenizer.from_pretrained("distilbert-base-uncased")
-
-save_path = './kaggle/working/distilbert_base_uncased'
-if not os.path.exists(save_path):
-    os.makedirs(save_path)
-
-bert_tokenizer.save_pretrained(save_path)
+logging.info('-----------Cleaning Done-----------')
+print('---------------------------------------------Clean Done-------------------------------------------------------')
 
 fast_tokenizer = BertWordPieceTokenizer('kaggle/working/distilbert_base_uncased/vocab.txt', lowercase=True)
 print(fast_tokenizer)
+logging.info(f'-----------The tokenizer is {fast_tokenizer}-----------')
+
 
 def fast_encode(texts, tokenizer, chunk_size=256, maxlen=128):
     tokenizer.enable_truncation(max_length=maxlen)
@@ -87,21 +104,11 @@ X = fast_encode(
 )
 
 
-
-class lstm_Bert(nn.Module):
+class lstm(nn.Module):
     def __init__(self, label_nums):
-        super(lstm_Bert, self).__init__()
-        transformer_layer = transformers.DistilBertModel.from_pretrained('distilbert-base-uncased')
-        p = next(transformer_layer.parameters())
-#         self.embed = nn.Embedding(
-#             num_embeddings = p.shape[0], 
-#             embedding_dim = p.shape[1]
-#         )
-#         self.embed.weight = p
-#         self.embed.weight.requires_grad = False
-        self.embed = nn.Embedding.from_pretrained(
-            p, freeze=True
-        )
+        super(lstm, self).__init__()
+        print("---------------")
+        self.embed = nn.Embedding(30524,768)
         self.lstm_layer = nn.LSTM(input_size=768, hidden_size=50, bidirectional=True)
         self.lstm_layer2 = nn.LSTM(input_size=50*2, hidden_size=25, bidirectional=True)
         self.drop1 = nn.Dropout(0.5)
@@ -109,18 +116,9 @@ class lstm_Bert(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.drop2 = nn.Dropout(0.5)
         self.fc2 = nn.Linear(50, label_nums)
+        self.reinitialize()
 
-#         self.fc = nn.Sequential(
-#             nn.Dropout(0.5),
-#             nn.Linear(50, 50),
-#             nn.ReLU(inplace=True),
-#             nn.Dropout(0.5),
-        
-#             nn.Linear(50, label_nums)
-#         )
-        self._reinitialize()
-
-    def _reinitialize(self):
+    def reinitialize(self):
         for name, p in self.named_parameters():
             if 'lstm' in name:
                 if 'weight_ih' in name:
@@ -141,38 +139,19 @@ class lstm_Bert(nn.Module):
 
     def forward(self, inputs):
         out = self.embed(inputs)
-#         print('embed: ', out.shape)
-#         out = out[:,0,:].view(-1, 768)
         out,(h,c) = self.lstm_layer(out)
-#         print('lstm_layer: ', out.shape)
         out,(h,c) = self.lstm_layer2(out)
-#         print('lstm_layer2: ', out.shape)
-#         out = out[:,0,:].view(-1, 50)
         out = out.max(axis=1).values
-#         print('max: ', out.shape)
-#         print("self.lstm_layer2:", out.shape)
         out=self.drop1(out)
-#         print('drop1: ', out.shape)
         out=self.fc1(out)
-#         print('fc1: ', out.shape)
         out=self.relu(out)
         out=self.drop2(out)
-#         print('drop2: ', out.shape)
         out=self.fc2(out)
-#         print('fc2: ', out.shape)
         out = F.softmax(out, dim=1)
         return out
 
-model = lstm_Bert(3)
-
-dd = bert_tokenizer.encode('if I were going',
-                      stride=0,
-                      padding=True, 
-                      truncation=True, max_length=128)
-
-dd = torch.Tensor([dd]).long()
-pred_ = model(dd)
-# print(dd)
+#label_num =3
+model = lstm(3)
 
 b=torch.cuda.is_available()
 if(b):
@@ -181,12 +160,12 @@ else:
     device = torch.device("cpu")
 
 model.to(device)
-optim = Adam(model.parameters(), lr=0.005)
+optim = Adam(model.parameters(), lr=lr)
 loss_fn = nn.CrossEntropyLoss()
 
+
 def train(train_loader, epoches):
-#     optim = AdamW(model.parameters(), lr=0.001)
-    model.train()
+    start = time.time()
     total_train_loss = 0
     iter_num = 0
     for ep in range(epoches):
@@ -194,6 +173,7 @@ def train(train_loader, epoches):
         loss_tt = 0
         right_cnt = 0
         samples_ = 0
+        model.train()
         for x, y in tqdm(train_loader):
             x = x.to(device)
             y = y.to(device)
@@ -203,9 +183,9 @@ def train(train_loader, epoches):
             optim.zero_grad()
             pred_ =  model(x)
             loss = loss_fn(pred_, y)
-            
+
             loss_tt += loss
-            pred_ = pred_.cpu().detach().numpy() 
+            pred_ = pred_.cpu().detach().numpy()
             right_cnt += np.sum(np.argmax(pred_, axis=1) == y.cpu().detach().numpy() )
             # 反向梯度信息
             loss.backward()
@@ -215,11 +195,16 @@ def train(train_loader, epoches):
             iter_num += 1
             if(iter_num % 100 == 0):
                 acc_ = accuracy_score(np.argmax(pred_, axis=1), y.cpu().detach().numpy())
-                print(f"[ iter_num-{iter_num} ]: loss: {loss:.5f}, acc: {acc_:.3f}")
+                print(f"[ iter_num-{iter_num} ]: loss: {loss:.5f}, acc: {acc_:.3f}, time: {time.time() - start:.1f}")
+                logging.info('epoch_no: %d: iter_num- %d, loss %.5f, train_acc %.3f, time %.1f' % (
+                    ep, iter_num, loss, acc_, time.time() - start))
+                loss_list.append(loss.item())
 
         loss_tt /= cnt
         acc_ = right_cnt / samples_
         print(f"[ ep: {ep} ] loss_tt: {loss_tt:.5f}, acc: {acc_:.3f}")
+        train_acc_list.append(acc_)
+        validation(val_dataloader=val_dataloader)
 
 def validation(val_dataloader):
     model.eval()
@@ -227,6 +212,7 @@ def validation(val_dataloader):
     loss_tt = 0
     right_cnt = 0
     samples_ = 0
+    start = time.time()
     for x, y in tqdm(val_dataloader):
         x = x.to(device)
         y = y.to(device)
@@ -235,7 +221,7 @@ def validation(val_dataloader):
         with torch.no_grad():
             pred_ =  model(x)
             loss = loss_fn(pred_, y)
-        
+
         pred_ = pred_.cpu().detach().numpy()
         loss_tt += loss
         right_cnt += np.sum(np.argmax(pred_, axis=1) == y.cpu().detach().numpy() )
@@ -243,40 +229,99 @@ def validation(val_dataloader):
     loss_tt /= cnt
     acc_ = right_cnt / samples_
     print("-------------------------------")
-    print(f"loss_tt: {loss_tt:.5f}, acc: {acc_:.3f}")
+    print(f"loss_tt: {loss_tt:.5f}, valid_acc: {acc_:.3f}, time: {time.time() - start :.1f}")
     print("-------------------------------")
+    logging.info('loss_total: %.5f, validation_acc: %.3f, time %.1f' % (loss_tt, acc_, time.time() - start))
+    test_acc_list.append(acc_)
 
-class myDataset(Dataset):
-    def __init__(self, encodings, labels):
-        self.encodings = encodings
-        self.labels = labels
-    
-    # 读取单个样本
-    def __getitem__(self, idx):
-        x = torch.tensor(self.encodings[idx])
-        y = torch.tensor(int(self.labels[idx]))
-        return x, y
-    
-    def __len__(self):
-        return len(self.labels)
+# class myDataset(Dataset):
+#     def __init__(self, encodings, labels):
+#         self.encodings = encodings
+#         self.labels = labels
+#
+#     # 读取单个样本
+#     def __getitem__(self, idx):
+#         x = torch.tensor(self.encodings[idx])
+#         y = torch.tensor(int(self.labels[idx]))
+#         return x, y
+#
+#     def __len__(self):
+#         return len(self.labels)
+
+def plot_save(loss_list, acc_list, train_acc_list):  # 不重要
+    '''
+    Three figures, validation accuracy vs. epoch no.; training accuracy vs. epoch no.; training loss vs. Batch count
+    Args:
+        loss_list: training loss for all batches
+        acc_list: validation accuracy for 20 epochs
+        train_acc_list: training accuracy for 20 epochs
+
+    Returns: three figures
+
+    '''
+    x1 = range(1, len(acc_list) + 1)  # set start value to 1
+    x2 = range(len(loss_list))
+    x3 = range(1, len(train_acc_list) + 1)
+    y1 = acc_list
+    y2 = loss_list
+    y3 = train_acc_list
+
+    fig, axs = plt.subplots(3, 1, figsize=(8, 12))
+
+    axs[0].plot(x1, y1, 'o-')
+    axs[0].set_title('Validation Accuracy vs. Epoch No.')
+    axs[0].set_xlabel('Epochs No.')
+    axs[0].set_ylabel('Validation Accuracy')
+
+    axs[1].plot(x3, y3, 'o-')
+    axs[1].set_title('Training Accuracy vs. Epoch No.')
+    axs[1].set_xlabel('Epochs No.')
+    axs[1].set_ylabel('Training dataset Accuracy')
+
+    axs[2].plot(x2, y2, '.-')
+    axs[2].set_title('Training Loss vs. Batch Count')
+    axs[2].set_xlabel('Batch Count No.')
+    axs[2].set_ylabel('Training Loss')
+
+    plt.subplots_adjust(hspace=0.4)
+    plt.savefig(('LSTM_' + 'epoch_'+ str(epoch) + '_' + str(
+        time.strftime("%m_%d_%H_%M_%S", time.localtime())) + ".jpg"))
+    plt.clf()  # Clear figure
+    plt.cla()  # Clear axes
+    plt.close()
+
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # tr_data = myDataset(X[:-1000,:], y[:-1000])
 # val_data = myDataset(X[-1000:,:], y[-1000:])
+
 tr_data = TensorDataset(
-    torch.tensor(X[:-1000,:]).long(), 
-    torch.tensor(y[:-1000]).long()
+    torch.tensor(X_train).long(),
+    torch.tensor(y_train).long()
 )
-# tr_data = TensorDataset(
-#     torch.tensor(X[:2,:]).long(), 
-#     torch.tensor(y[:2]).long()
-# )
+
 val_data = TensorDataset(
-    torch.tensor(X[-1000:,:]).long(), 
-    torch.tensor(y[-1000:]).long()
+    torch.tensor(X_val).long(),
+    torch.tensor(y_val).long()
 )
 
-train_loader = DataLoader(tr_data, batch_size=32, shuffle=True)
-val_dataloader = DataLoader(val_data, batch_size=32, shuffle=True)
+# tr_data = TensorDataset(
+#     torch.tensor(X[:-1000,:]).long(),
+#     torch.tensor(y[:-1000]).long()
+# )
+# # tr_data = TensorDataset(
+# #     torch.tensor(X[:2,:]).long(),
+# #     torch.tensor(y[:2]).long()
+# # )
+# val_data = TensorDataset(
+#     torch.tensor(X[-1000:,:]).long(),
+#     torch.tensor(y[-1000:]).long()
+# )
 
-train(train_loader=train_loader, epoches=10)
+train_loader = DataLoader(tr_data, batch_size=batch_size, shuffle=True)
+val_dataloader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
+
+train(train_loader=train_loader, epoches=epoch)
 validation(val_dataloader=val_dataloader)
+
+plot_save(loss_list, test_acc_list, train_acc_list)
