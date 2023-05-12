@@ -41,7 +41,16 @@ Task B: Sentiment Phrase Extraction:
       - function runs training and validation function
     - test.py : run testing and output a submission file
 
-# Software used
-<img src="![]()" width="360" height="180">
+# Others
+While running, a folder named 'Kaggle' will appear, related to the tokenizer information in order to match the tokenizers
+used in LSTM and DistilBERT_LSTM model.
 
-[//]: # (![image]&#40;https://github.com/mujiexu2/ELEC0130-assignment22-23/blob/main/images/arduinoide.png #pic_left =180x360&#41;)
+it stores the:
+    - special_tokens_map.json
+    - tokenizer.json
+    - tokenizer_config.json
+    - vocab.txt
+
+# Software used
+<img src="https://github.com/mujiexu2/DLNLP_assignment_23/blob/main/pycharm.png" width="360" height="180">
+[//]: # (![image]&#40;https://github.com/mujiexu2/DLNLP_assignment_23/blob/main/pycharm.png #pic_left =180x360&#41;)
