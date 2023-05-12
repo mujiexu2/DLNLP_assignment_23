@@ -48,8 +48,9 @@ Task B: Sentiment Phrase Extraction:
     - LSTM
 2. Sentiment Phrase Extraction
     - BERT_Base
-### To modify the epoch number of Sentiment Analysis models, just change the epoch number in the related python file
-### To modify the epoch number of Sentiment Phrase Extraction models, the epoch number of train.py and main_bert.py should be change at the same time
+### Change the epoch number
+To modify the epoch number of Sentiment Analysis models, just change the epoch number in the related python file
+To modify the epoch number of Sentiment Phrase Extraction models, the epoch number of train.py and main_bert.py should be change at the same time
 
 
 
