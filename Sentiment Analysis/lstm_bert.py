@@ -38,7 +38,7 @@ loss_list = []
 test_acc_list = []
 train_acc_list = []
 
-log_path = Path().cwd() / ('LSTM_BERT_train_validation_' + 'epoch_' + str(epoch) + '_'+ str(
+log_path = Path().cwd() / ('LSTM_BERT_train_validation_' + 'epoch_' + str(epoch) + '_' + str(
     time.strftime("%m_%d_%H_%M_%S", time.localtime())) + ".log")
 
 logging.basicConfig(format='%(levelname)s: %(message)s',
@@ -46,7 +46,7 @@ logging.basicConfig(format='%(levelname)s: %(message)s',
                     filename=log_path,
                     filemode='a')
 
-print('----------Start DistilBERT_LSTM model----------')
+
 
 TRAIN_DIR = Path().cwd() / 'Datasets/train.csv'
 TEST_DIR = Path().cwd() / 'Datasets/test.csv'
@@ -65,7 +65,7 @@ def basic_cleaning(text):
         text: tweet texts
 
     Returns:
-        text which after
+        text which after cleaning
 
     '''
     # Remove any URLs that start with "http://" or "https://" and end with ".cm"
@@ -91,27 +91,12 @@ def remove_html(text):
 
 # remove repeated characters
 def remove_multiplechars(text):
-    '''
-
-    Args:
-        text:
-
-    Returns:
-
-    '''
     text = re.sub(r'(.)\1{3,}', r'\1', text)
     return text
 
 
 def clean(df):
-    '''
 
-    Args:
-        df:
-
-    Returns:
-
-    '''
     for col in ['text']:  # ,'selected_text']:
         df[col] = df[col].astype(str).apply(lambda x: basic_cleaning(x))
         df[col] = df[col].astype(str).apply(lambda x: remove_html(x))
@@ -169,7 +154,7 @@ def fast_encode(texts, tokenizer, chunk_size=256, maxlen=128):
         text_chunk = texts[i:i + chunk_size].tolist()
         encs = tokenizer.encode_batch(text_chunk)
         all_ids.extend([enc.ids for enc in encs])
-        #logger.info("Processed chunk %d", i)
+        # logger.info("Processed chunk %d", i)
     return np.array(all_ids)  # numpy array can do subsequent data processing and manipulation easily
 
 
@@ -293,13 +278,13 @@ def train(train_loader, epoches):
         cnt = 0
         loss_tt = 0
         right_cnt = 0
-        samples_ = 0
+        samples = 0
         model.train()
         for x, y in tqdm(train_loader):
             x = x.to(device)
             y = y.to(device)
             cnt += 1
-            samples_ += len(y)
+            samples += len(y)
             # Forward propagation
             optim.zero_grad()
             pred_ = model(x)
@@ -317,13 +302,15 @@ def train(train_loader, epoches):
             if (iter_num % 100 == 0):
                 acc_ = accuracy_score(np.argmax(pred_, axis=1), y.cpu().detach().numpy())
                 print(f"[ iter_num-{iter_num} ]: loss: {loss:.5f}, acc: {acc_:.3f}, time: {time.time() - start:.1f}")
-                logging.info('epoch_no: %d: iter_num- %d, loss %.5f, train_acc %.3f, time %.1f' % (ep, iter_num, loss, acc_, time.time() - start))
+                logging.info('epoch_no: %d: iter_num- %d, loss %.5f, train_acc %.3f, time %.1f' % (
+                    ep, iter_num, loss, acc_, time.time() - start))
                 loss_list.append(loss.item())
 
         loss_tt /= cnt
-        acc_ = right_cnt / samples_
+        acc_ = right_cnt / samples
         print(f"[ ep: {ep} ] loss_tt: {loss_tt:.5f}, acc: {acc_:.3f}, time: {time.time() - start:.1f}")
-        logging.info('epoch_no: %d, loss_total: %.5f, train_acc: %.3f, time %.1f' % (ep, loss, acc_, time.time() - start))
+        logging.info(
+            'epoch_no: %d, loss_total: %.5f, train_acc: %.3f, time %.1f' % (ep, loss, acc_, time.time() - start))
         train_acc_list.append(acc_)
         validation(val_dataloader=val_dataloader)
 
@@ -343,12 +330,12 @@ def validation(val_dataloader):
     cnt = 0
     loss_tt = 0
     right_cnt = 0
-    samples_ = 0
+    samples = 0
     for x, y in tqdm(val_dataloader):
         x = x.to(device)
         y = y.to(device)
         cnt += 1
-        samples_ += len(y)
+        samples += len(y)
         with torch.no_grad():
             pred_ = model(x)
             loss = loss_fn(pred_, y)
@@ -358,45 +345,12 @@ def validation(val_dataloader):
         right_cnt += np.sum(np.argmax(pred_, axis=1) == y.cpu().detach().numpy())
 
     loss_tt /= cnt
-    acc_ = right_cnt / samples_
+    acc_ = right_cnt / samples
     print("-------------------------------")
     print(f"loss_tt: {loss_tt:.5f}, valid_acc: {acc_:.3f}, time: {time.time() - start:.1f}")
     print("-------------------------------")
     logging.info('loss_total: %.5f, validation_acc: %.3f, time %.1f' % (loss_tt, acc_, time.time() - start))
     test_acc_list.append(acc_)
-
-# class myDataset(Dataset):
-#     def __init__(self, encodings, labels):
-#         self.encodings = encodings
-#         self.labels = labels
-#
-#     # Read each sample
-#     def __getitem__(self, idx):
-#         x = torch.tensor(self.encodings[idx])
-#         y = torch.tensor(int(self.labels[idx]))
-#         return x, y
-#
-#     def __len__(self):
-#         return len(self.labels)
-
-
-# tr_data = myDataset(X[:-1000,:], y[:-1000])
-# val_data = myDataset(X[-1000:,:], y[-1000:])
-# TensorDataset: create a dataset from a set of PyTorch tensors.
-
-
-# tr_data = TensorDataset(
-#     torch.tensor(X[:-1000, :]).long(),
-#     torch.tensor(y[:-1000]).long()
-# )
-# # tr_data = TensorDataset(
-# #     torch.tensor(X[:2,:]).long(),
-# #     torch.tensor(y[:2]).long()
-# # )
-# val_data = TensorDataset(
-#     torch.tensor(X[-1000:, :]).long(),
-#     torch.tensor(y[-1000:]).long()
-# )
 
 
 def plot_save(loss_list, acc_list, train_acc_list):  # 不重要
@@ -435,19 +389,16 @@ def plot_save(loss_list, acc_list, train_acc_list):  # 不重要
     axs[2].set_ylabel('Training Loss')
 
     plt.subplots_adjust(hspace=0.4)
-    plt.savefig(('LSTM_BERT_' + 'epoch_'+ str(epoch) + '_' + str(
+    plt.savefig(('LSTM_BERT_' + 'epoch_' + str(epoch) + '_' + str(
         time.strftime("%m_%d_%H_%M_%S", time.localtime())) + ".jpg"))
     plt.clf()  # Clear figure
     plt.cla()  # Clear axes
     plt.close()
 
+
 # using train_test_split() to split dataset to validation set be 20% and the training set be 80%
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# TensorDataset: create a dataset from a set of PyTorch tensors.
-# Use TensorDataset to import training dataset and validation dataset, after converting datasets into TensorDatasets
-# each element is a tuple containing a sequence of inputs and a corresponding label,
-# so that they can be processed as a whole.
 tr_data = TensorDataset(
     torch.tensor(X_train).long(),
     torch.tensor(y_train).long()
@@ -458,13 +409,13 @@ val_data = TensorDataset(
     torch.tensor(y_val).long()
 )
 
-# Import training data and validation data 导入train数据和validation数据
+# Import training data and validation data
 train_loader = DataLoader(tr_data, batch_size, shuffle=True)
 val_dataloader = DataLoader(val_data, batch_size, shuffle=False)
 
-# Start Training and validation 开始训练和验证
+# Start Training and validation
 train(train_loader=train_loader, epoches=epoch)
 validation(val_dataloader=val_dataloader)
 
 plot_save(loss_list, test_acc_list, train_acc_list)
-print('----------DistilBERT_LSTM model done----------')
+

@@ -5,15 +5,16 @@ sys.path.append('Sentiment Analysis')
 
 # ======================================================================================================================
 # Task A: Sentiment Analysis
-print('----------Start LSTM model----------')
-# The LSTM model
-import lstm
-print('----------LSTM model done----------')
 
 # The DistilBERT_LSTM model
 print('----------Start DistilBERT_LSTM model----------')
 import lstm_bert
 print('----------DistilBERT_LSTM model done----------')
+
+print('----------Start LSTM model----------')
+# The LSTM model
+import lstm
+print('----------LSTM model done----------')
 
 # ======================================================================================================================
 # Task B: Sentiment Phrase Extraction

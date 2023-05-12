@@ -13,18 +13,14 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
-from torch.optim import AdamW
-from transformers import BertModel
+
 import matplotlib.pyplot as plt
 
 from torch.utils.data import DataLoader, TensorDataset, Dataset
-from torch.optim import AdamW, Adam
+from torch.optim import Adam
 import torch
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
-
-from sklearn.model_selection import StratifiedShuffleSplit
-print('----------Start LSTM model for Sentiment Analysis----------'）
 
 epoch = 20
 batch_size = 32
@@ -109,7 +105,9 @@ class lstm(nn.Module):
     def __init__(self, label_nums):
         super(lstm, self).__init__()
         print("---------------")
+        # embedding layer
         self.embed = nn.Embedding(30524,768)
+        # 2 lstm layers
         self.lstm_layer = nn.LSTM(input_size=768, hidden_size=50, bidirectional=True)
         self.lstm_layer2 = nn.LSTM(input_size=50*2, hidden_size=25, bidirectional=True)
         self.drop1 = nn.Dropout(0.5)
@@ -166,6 +164,16 @@ loss_fn = nn.CrossEntropyLoss()
 
 
 def train(train_loader, epoches):
+    '''
+    start training
+    Args:
+        train_loader: train datasets dataloader
+        epoches: epoch no.
+
+    Returns:
+
+    '''
+    #     optim = AdamW(model.parameters(), lr=0.001)
     start = time.time()
     total_train_loss = 0
     iter_num = 0
@@ -173,14 +181,14 @@ def train(train_loader, epoches):
         cnt = 0
         loss_tt = 0
         right_cnt = 0
-        samples_ = 0
+        samples = 0
         model.train()
         for x, y in tqdm(train_loader):
             x = x.to(device)
             y = y.to(device)
             cnt += 1
-            samples_ += len(y)
-            # 正向传播
+            samples += len(y)
+            # Forward propagation
             optim.zero_grad()
             pred_ =  model(x)
             loss = loss_fn(pred_, y)
@@ -188,10 +196,10 @@ def train(train_loader, epoches):
             loss_tt += loss
             pred_ = pred_.cpu().detach().numpy()
             right_cnt += np.sum(np.argmax(pred_, axis=1) == y.cpu().detach().numpy() )
-            # 反向梯度信息
+            # Backpropagation gradient information
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            # 参数更新
+            # Update parameters
             optim.step()
             iter_num += 1
             if(iter_num % 100 == 0):
@@ -202,8 +210,10 @@ def train(train_loader, epoches):
                 loss_list.append(loss.item())
 
         loss_tt /= cnt
-        acc_ = right_cnt / samples_
+        acc_ = right_cnt / samples
         print(f"[ ep: {ep} ] loss_tt: {loss_tt:.5f}, acc: {acc_:.3f}")
+        logging.info(
+            'epoch_no: %d, loss_total: %.5f, train_acc: %.3f, time %.1f' % (ep, loss, acc_, time.time() - start))
         train_acc_list.append(acc_)
         validation(val_dataloader=val_dataloader)
 
@@ -212,13 +222,13 @@ def validation(val_dataloader):
     cnt = 0
     loss_tt = 0
     right_cnt = 0
-    samples_ = 0
+    samples = 0
     start = time.time()
     for x, y in tqdm(val_dataloader):
         x = x.to(device)
         y = y.to(device)
         cnt += 1
-        samples_ += len(y)
+        samples += len(y)
         with torch.no_grad():
             pred_ =  model(x)
             loss = loss_fn(pred_, y)
@@ -228,26 +238,14 @@ def validation(val_dataloader):
         right_cnt += np.sum(np.argmax(pred_, axis=1) == y.cpu().detach().numpy() )
 
     loss_tt /= cnt
-    acc_ = right_cnt / samples_
+    acc_ = right_cnt / samples
     print("-------------------------------")
     print(f"loss_tt: {loss_tt:.5f}, valid_acc: {acc_:.3f}, time: {time.time() - start :.1f}")
     print("-------------------------------")
     logging.info('loss_total: %.5f, validation_acc: %.3f, time %.1f' % (loss_tt, acc_, time.time() - start))
     test_acc_list.append(acc_)
 
-# class myDataset(Dataset):
-#     def __init__(self, encodings, labels):
-#         self.encodings = encodings
-#         self.labels = labels
-#
-#     # 读取单个样本
-#     def __getitem__(self, idx):
-#         x = torch.tensor(self.encodings[idx])
-#         y = torch.tensor(int(self.labels[idx]))
-#         return x, y
-#
-#     def __len__(self):
-#         return len(self.labels)
+
 
 def plot_save(loss_list, acc_list, train_acc_list):  # 不重要
     '''
@@ -291,10 +289,10 @@ def plot_save(loss_list, acc_list, train_acc_list):  # 不重要
     plt.cla()  # Clear axes
     plt.close()
 
+# using train_test_split() to split dataset to validation set be 20% and the training set be 80%
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# tr_data = myDataset(X[:-1000,:], y[:-1000])
-# val_data = myDataset(X[-1000:,:], y[-1000:])
+
 
 tr_data = TensorDataset(
     torch.tensor(X_train).long(),
@@ -306,22 +304,11 @@ val_data = TensorDataset(
     torch.tensor(y_val).long()
 )
 
-# tr_data = TensorDataset(
-#     torch.tensor(X[:-1000,:]).long(),
-#     torch.tensor(y[:-1000]).long()
-# )
-# # tr_data = TensorDataset(
-# #     torch.tensor(X[:2,:]).long(),
-# #     torch.tensor(y[:2]).long()
-# # )
-# val_data = TensorDataset(
-#     torch.tensor(X[-1000:,:]).long(),
-#     torch.tensor(y[-1000:]).long()
-# )
-
+# Load training data and validation data
 train_loader = DataLoader(tr_data, batch_size=batch_size, shuffle=True)
 val_dataloader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
 
+# Start Training and validation
 train(train_loader=train_loader, epoches=epoch)
 validation(val_dataloader=val_dataloader)
 

@@ -14,15 +14,27 @@ tokenizer = transformers.BertTokenizer.from_pretrained(BERT_PATH)
 MAX_SEQUENCE_LENGTH = 108
 
 def create_targets(df):
+    '''
+
+    Args:
+        df: dataframe needs to have
+
+    Returns:
+
+    '''
+    # Does tokenization to the two column: text, selected_text, and convert them to new columns in the same dataframe
+    df
     df['t_text'] = df['text'].apply(lambda x: tokenizer.tokenize(str(x)))
     df['t_selected_text'] = df['selected_text'].apply(lambda x: tokenizer.tokenize(str(x)))
 
     def func(row):
+        # assign the column values of 't_text' and 't_selected_text' to x and y, per row
         x, y = row['t_text'], row['t_selected_text'][:]
-        for offset in range(len(x)):
+        for offset in range(len(x)): # when offset = 0, compare text(whole sentence) with selected sentences
             d = dict(zip(x[offset:], y))
-
-            check = [k == v for k, v in d.items()]
+            # d= {key = ' I'd have responded, if I were going': value = ' I'd have responded, if I were going'}
+            # a list of list comprehension, check = True if k == v, check = False if k not == v
+            check = [k == v for k, v in d.items()] # true no. of check == selected text no.
             if all(check) == True:
                 break
         return [0] * offset + [1] * len(y) + [0] * (len(x) - offset - len(y))
