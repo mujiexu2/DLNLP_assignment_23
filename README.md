@@ -41,6 +41,19 @@ Task B: Sentiment Phrase Extraction:
       - function runs training and validation function
     - test.py : run testing and output a submission file
 
+# Instructions to Run:
+### Run main.py, it will start in the following order:
+1. Sentiment Analysis
+    - DistilBERT_LSTM
+    - LSTM
+2. Sentiment Phrase Extraction
+    - BERT_Base
+### To modify the epoch number of Sentiment Analysis models, just change the epoch number in the related python file
+### To modify the epoch number of Sentiment Phrase Extraction models, the epoch number of train.py and main_bert.py should be change at the same time
+
+
+
+
 # Others
 While running, a folder named 'Kaggle' will appear, related to the tokenizer information in order to match the tokenizers
 used in LSTM and DistilBERT_LSTM model.

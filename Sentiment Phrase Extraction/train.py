@@ -31,7 +31,7 @@ warnings.filterwarnings("ignore")
 
 '''------------Set Configuration------------'''
 BATCH_SIZE = 32
-EPOCHS = 1
+EPOCHS = 5
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 MAX_SEQUENCE_LENGTH = 108
 
