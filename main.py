@@ -7,7 +7,7 @@ sys.path.append('Sentiment Analysis')
 # Task A: Sentiment Analysis
 print('----------Start LSTM model----------')
 # The LSTM model
-import lstm_fig
+import lstm
 print('----------LSTM model done----------')
 
 # The DistilBERT_LSTM model
