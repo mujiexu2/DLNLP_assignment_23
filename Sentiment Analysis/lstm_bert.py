@@ -26,7 +26,6 @@ from sklearn.model_selection import train_test_split
 # Data visualization
 from tqdm import tqdm
 
-from sklearn.model_selection import StratifiedShuffleSplit
 
 '''--------------------------- Set Configurations--------------------------------------------------'''
 # Hyper parameter

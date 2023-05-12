@@ -10,12 +10,27 @@ The competition is separated into two tasks, Sentiment Analysis and Sentiment Ph
 
 Task A: Sentiment Analysis: 
 
-  - LSTM model 
-  - Hybrid model, DistilBERT_LSTM model
+  - LSTM(BiDirectional LSTM) model 
+  - Hybrid model, DistilBERT_LSTM(BiDirectional LSTM) model
 
 Task B: Sentiment Phrase Extraction:
 
   - BERT_BASELINE uncased model
+
+These models above all self-designed and built.
+
+# Python Libraries:
+- pathlib
+- pandas
+- logging
+- numpy
+- tqdm
+- pytorch
+- transformers
+- sklearn
+- re
+- matplotlib
+
 
 # Role of each file
 
@@ -26,8 +41,8 @@ Task B: Sentiment Phrase Extraction:
 
 
   - Sentiment Analysis:
-    - lstm.py : the LSTM model
-    - lstm_bert.py: the DistilBERT_LSTM model
+    - lstm.py : the LSTM(BiDirectional LSTM) model
+    - lstm_bert.py: the DistilBERT_LSTM(BiDirectional LSTM) model
 
   - Sentiment Phrase Extraction:
     - main_bert.py : the main file for this BERT_BASE uncased model
