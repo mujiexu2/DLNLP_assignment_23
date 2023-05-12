@@ -52,5 +52,4 @@ it stores the:
     - vocab.txt
 
 # Software used
-<img src="https://github.com/mujiexu2/DLNLP_assignment_23/blob/main/pycharm.png" width="360" height="180">
-[//]: # (![image]&#40;https://github.com/mujiexu2/DLNLP_assignment_23/blob/main/pycharm.png #pic_left =180x360&#41;)
+<img src="https://github.com/mujiexu2/DLNLP_assignment_23/blob/main/pycharm.png">
