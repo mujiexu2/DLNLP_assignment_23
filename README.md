@@ -46,10 +46,10 @@ While running, a folder named 'Kaggle' will appear, related to the tokenizer inf
 used in LSTM and DistilBERT_LSTM model.
 
 it stores the:
-    - special_tokens_map.json
-    - tokenizer.json
-    - tokenizer_config.json
-    - vocab.txt
+- special_tokens_map.json
+- tokenizer.json
+- tokenizer_config.json
+- vocab.txt
 
 # Software used
 <img src="https://github.com/mujiexu2/DLNLP_assignment_23/blob/main/pycharm.png" width="180" height="180">
