@@ -31,7 +31,7 @@ warnings.filterwarnings("ignore")
 
 '''------------Set Configuration------------'''
 BATCH_SIZE = 32
-EPOCHS = 5
+EPOCHS = 1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 MAX_SEQUENCE_LENGTH = 108
 
@@ -48,15 +48,8 @@ logging.basicConfig(format='%(levelname)s: %(message)s',
 BERT_PATH = 'bert-base-uncased'
 
 # Loading Data
-TRAIN_DIR = Path().cwd() / 'tweet-sentiment-extraction/train.csv'
-TEST_DIR = Path().cwd() / 'tweet-sentiment-extraction/test.csv'
-SUB_DIR = Path().cwd() / 'tweet-sentiment-extraction/sample_submission.csv'
-
+TRAIN_DIR = Path().cwd() / 'Datasets/train.csv'
 train = pd.read_csv(TRAIN_DIR)
-test = pd.read_csv(TEST_DIR)
-submission = pd.read_csv(SUB_DIR)
-
-
 train = preprocessing.create_targets(train)
 logging.info('----------------------------targets created----------------------------')
 

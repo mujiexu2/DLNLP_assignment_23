@@ -24,8 +24,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
 from sklearn.model_selection import StratifiedShuffleSplit
+print('----------Start LSTM model for Sentiment Analysis----------'）
 
-# Hyper parameter
 epoch = 20
 batch_size = 32
 lr = 0.005
@@ -42,8 +42,9 @@ logging.basicConfig(format='%(levelname)s: %(message)s',
                     filename=log_path,
                     filemode='a')
 
-TRAIN_DIR = Path().cwd() / 'tweet-sentiment-extraction/train.csv'
-TEST_DIR = Path().cwd() / 'tweet-sentiment-extraction/test.csv'
+
+TRAIN_DIR = Path().cwd() / 'Datasets/train.csv'
+TEST_DIR = Path().cwd() / 'Datasets/test.csv'
 
 df = pd.read_csv(TRAIN_DIR)
 df_test = pd.read_csv(TEST_DIR)

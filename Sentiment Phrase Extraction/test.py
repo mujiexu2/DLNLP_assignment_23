@@ -9,8 +9,8 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-TEST_DIR = Path().cwd() / 'tweet-sentiment-extraction/test.csv'
-SUB_DIR = Path().cwd() / 'tweet-sentiment-extraction/sample_submission.csv'
+TEST_DIR = Path().cwd() / 'Datasets/test.csv'
+SUB_DIR = Path().cwd() / 'Datasets/sample_submission.csv'
 
 test = pd.read_csv(TEST_DIR)
 submission = pd.read_csv(SUB_DIR)

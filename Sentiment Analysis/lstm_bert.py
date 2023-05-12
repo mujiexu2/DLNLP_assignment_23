@@ -46,8 +46,10 @@ logging.basicConfig(format='%(levelname)s: %(message)s',
                     filename=log_path,
                     filemode='a')
 
-TRAIN_DIR = Path().cwd() / 'tweet-sentiment-extraction/train.csv'
-TEST_DIR = Path().cwd() / 'tweet-sentiment-extraction/test.csv'
+print('----------Start DistilBERT_LSTM model----------')
+
+TRAIN_DIR = Path().cwd() / 'Datasets/train.csv'
+TEST_DIR = Path().cwd() / 'Datasets/test.csv'
 
 df = pd.read_csv(TRAIN_DIR)
 df_test = pd.read_csv(TEST_DIR)
@@ -433,7 +435,7 @@ def plot_save(loss_list, acc_list, train_acc_list):  # 不重要
     axs[2].set_ylabel('Training Loss')
 
     plt.subplots_adjust(hspace=0.4)
-    plt.savefig(('LSTM_BERT' + 'epoch_'+ str(epoch) + '_' + str(
+    plt.savefig(('LSTM_BERT_' + 'epoch_'+ str(epoch) + '_' + str(
         time.strftime("%m_%d_%H_%M_%S", time.localtime())) + ".jpg"))
     plt.clf()  # Clear figure
     plt.cla()  # Clear axes
@@ -465,3 +467,4 @@ train(train_loader=train_loader, epoches=epoch)
 validation(val_dataloader=val_dataloader)
 
 plot_save(loss_list, test_acc_list, train_acc_list)
+print('----------DistilBERT_LSTM model done----------')

@@ -23,7 +23,7 @@ from train import run
 
 '''----------Configuration----------'''
 BATCH_SIZE = 32
-EPOCHS = 5
+EPOCHS = 1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 MAX_SEQUENCE_LENGTH = 108
 
@@ -36,7 +36,7 @@ logging.basicConfig(format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(leve
                     filename=log_path,
                     filemode='a')
 # Loading Data
-TRAIN_DIR = Path().cwd() / 'tweet-sentiment-extraction/train.csv'
+TRAIN_DIR = Path().cwd() / 'Datasets/train.csv'
 # TEST_DIR = Path().cwd() / 'tweet-sentiment-extraction/test.csv'
 # SUB_DIR = Path().cwd() / 'tweet-sentiment-extraction/sample_submission.csv'
 
