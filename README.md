@@ -42,6 +42,6 @@ Task B: Sentiment Phrase Extraction:
     - test.py : run testing and output a submission file
 
 # Software used
-<img src="" width="360" height="180">
+<img src="![]()" width="360" height="180">
 
 [//]: # (![image]&#40;https://github.com/mujiexu2/ELEC0130-assignment22-23/blob/main/images/arduinoide.png #pic_left =180x360&#41;)
