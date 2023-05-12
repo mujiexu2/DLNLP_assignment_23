@@ -4,6 +4,8 @@
 This project based on a Kaggle competition, Tweet Sentiment Extraction, aims to extract support phrases for sentiment 
 labels. There are of three sentiment labels, positive, neutral and negative.
 
+Libraries can be installed with requirements.txt file
+
 link: https://www.kaggle.com/competitions/tweet-sentiment-extraction
 
 The competition is separated into two tasks, Sentiment Analysis and Sentiment Phrase Extraction.
@@ -30,7 +32,6 @@ These models above all self-designed and built.
 - sklearn
 - re
 - matplotlib
-
 
 # Role of each file
 
