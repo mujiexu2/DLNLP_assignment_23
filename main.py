@@ -8,12 +8,12 @@ sys.path.append('Sentiment Analysis')
 
 # The DistilBERT_LSTM model
 print('----------Start DistilBERT_LSTM model----------')
-#import lstm_bert
+import lstm_bert
 print('----------DistilBERT_LSTM model done----------')
 
 print('----------Start LSTM model----------')
 # The LSTM model
-# import lstm
+import lstm
 print('----------LSTM model done----------')
 
 # ======================================================================================================================
